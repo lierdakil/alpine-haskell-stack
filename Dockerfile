@@ -132,7 +132,7 @@ COPY --from=build-cabal /usr/bin/cabal /usr/bin/cabal
 
 # NOTE: 'stack --docker' needs bash + usermod/groupmod (from shadow)
 # cabal needs libffi
-RUN apk add --no-cache bash shadow libffi
+RUN apk add --no-cache bash shadow openssh-client tar libffi
 
 RUN ghcup set ${GHC_VERSION} &&\
     stack config set system-ghc --global true
