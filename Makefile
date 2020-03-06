@@ -43,7 +43,7 @@ base:
 
 .PHONY: ghc
 ghc: TGT = build-ghc
-ghc: LBL = build-ghc
+ghc: LBL = build-ghc-$(TARGET_GHC_VERSION)
 ghc: base
 	$(DOCKER_BUILD)
 
