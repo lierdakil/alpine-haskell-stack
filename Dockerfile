@@ -1,7 +1,7 @@
 ################################################################################
 # Set up environment variables, OS packages, and scripts that are common to the
 # build and distribution layers in this Dockerfile
-FROM alpine:3.11 AS base
+FROM alpine:3.12 AS base
 
 # Must be one of 'gmp' or 'simple'; used to build GHC with support for either
 # 'integer-gmp' (with 'libgmp') or 'integer-simple'
@@ -14,9 +14,6 @@ ARG GHC_VERSION
 # are available in the build layers
 ENV GHCUP_INSTALL_BASE_PREFIX=/
 ENV PATH=/.ghcup/bin:$PATH
-
-# Use the latest version of ghcup (at the time of writing)
-ENV GHCUP_VERSION=b068fba3367fd18f03772c8f15531d75e4b38a7e
 
 # Install the basic required dependencies to run 'ghcup' and 'stack'
 RUN apk upgrade --no-cache &&\
@@ -31,11 +28,16 @@ RUN apk upgrade --no-cache &&\
         apk add --no-cache gmp-dev; \
     fi
 
+ENV GHCUP_SHA256="cfdb01dde77121859b5d90b6707238b54e23787fcbb3003e18ab52a5dbfee330  /usr/bin/ghcup"
+
 # Download, verify, and install ghcup
 RUN echo "Downloading and installing ghcup" &&\
     cd /tmp &&\
-    wget -P /tmp/ "https://gitlab.haskell.org/haskell/ghcup/raw/${GHCUP_VERSION}/ghcup" &&\
-    mv /tmp/ghcup /usr/bin/ghcup &&\
+    wget -O /usr/bin/ghcup "https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup" &&\
+    if ! echo -n "${GHCUP_SHA256}" | sha256sum -c -; then \
+        echo "ghcup checksum failed" >&2 &&\
+        exit 1 ;\
+    fi ;\
     chmod +x /usr/bin/ghcup
 
 ################################################################################
@@ -57,7 +59,7 @@ RUN echo "Install OS packages necessary to build GHC" &&\
         ghc \
         linux-headers \
         libffi-dev \
-        llvm5 \
+        llvm9 \
         musl-dev \
         ncurses-dev \
         perl \
@@ -81,7 +83,7 @@ fi
 RUN echo "Compiling and installing GHC" &&\
     LD=ld.gold \
     SPHINXBUILD=/usr/bin/sphinx-build-3 \
-      ghcup -v compile -j $(nproc) -c /tmp/build.mk ${GHC_VERSION} ghc-8.6.5 &&\
+      ghcup -v compile ghc -j $(nproc) -c /tmp/build.mk -v ${GHC_VERSION} -b /usr/bin/ghc &&\
     rm /tmp/build.mk &&\
     echo "Uninstalling GHC bootstrapping compiler" &&\
     apk del ghc &&\
@@ -91,8 +93,8 @@ RUN echo "Compiling and installing GHC" &&\
 # Intermediate layer that assembles 'stack' tooling
 FROM base AS build-tooling
 
-ENV STACK_VERSION=2.1.3
-ENV STACK_SHA256="4e937a6ad7b5e352c5bd03aef29a753e9c4ca7e8ccc22deb5cd54019a8cf130c  stack-${STACK_VERSION}-linux-x86_64-static.tar.gz"
+ENV STACK_VERSION=2.3.1
+ENV STACK_SHA256="4bae8830b2614dddf3638a6d1a7bbbc3a5a833d05b2128eae37467841ac30e47  stack-${STACK_VERSION}-linux-x86_64-static.tar.gz"
 
 # Download, verify, and install stack
 RUN echo "Downloading and installing stack" &&\
@@ -114,7 +116,7 @@ FROM base AS build-cabal
 RUN apk add --no-cache ghc cabal zlib-dev &&\
     echo "Building cabal-install" &&\
     cabal v2-update &&\
-    cabal v2-install --global cabal-install &&\
+    cabal v2-install cabal-install &&\
     apk del ghc cabal zlib-dev &&\
     cp $(realpath ~/.cabal/bin/cabal) /usr/bin
 

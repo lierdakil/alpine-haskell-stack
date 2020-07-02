@@ -1,7 +1,7 @@
 ################################################################################
 # Variables
 # GHC version to build
-TARGET_GHC_VERSION ?= 8.8.3
+TARGET_GHC_VERSION ?= 8.10.1
 # Must be one of 'gmp' or 'simple'; used to build GHC with support for either
 # 'integer-gmp' (with 'libgmp') or 'integer-simple'
 TARGET_GHC_BUILD_TYPE ?= gmp
@@ -64,3 +64,8 @@ image: TGT = image
 image: LBL = $(TARGET_GHC_VERSION)
 image: base ghc tooling cabal
 	$(DOCKER_BUILD)
+
+.PHONY: publish
+publish:
+	docker tag alpine-haskell-$(TARGET_GHC_BUILD_TYPE):$(TARGET_GHC_VERSION) lierdakil/alpine-haskell-$(TARGET_GHC_BUILD_TYPE):$(TARGET_GHC_VERSION)
+	docker push lierdakil/alpine-haskell-$(TARGET_GHC_BUILD_TYPE):$(TARGET_GHC_VERSION)
