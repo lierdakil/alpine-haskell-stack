@@ -113,12 +113,19 @@ RUN echo "Downloading and installing stack" &&\
 # Build cabal
 FROM base AS build-cabal
 
-RUN apk add --no-cache ghc cabal zlib-dev &&\
-    echo "Building cabal-install" &&\
-    cabal v2-update &&\
-    cabal v2-install cabal-install &&\
-    apk del ghc cabal zlib-dev &&\
-    cp $(realpath ~/.cabal/bin/cabal) /usr/bin
+ENV CABAL_VERSION 3.2.0.0
+
+RUN echo "Downloading and installing cabal-install" &&\
+    TEMP="$(mktemp -d)" &&\
+    cd "$TEMP" &&\
+    CABAL_DIST_FILENAME="cabal-install-${CABAL_VERSION}-x86_64-alpine-linux-musl.tar.xz" &&\
+    CABAL_SHA256="8bae37a1ce8b5f10440b5591fed734935e1411c1b765258325ffe268e2cc2042  ${CABAL_DIST_FILENAME}" &&\
+    wget https://downloads.haskell.org/~cabal/cabal-install-${CABAL_VERSION}/${CABAL_DIST_FILENAME} &&\
+    echo "${CABAL_SHA256}" | sha256sum -c - &&\
+    tar Jxf ${CABAL_DIST_FILENAME} &&\
+    mv cabal /usr/bin/cabal &&\
+    cd / &&\
+    rm -r "$TEMP"
 
 ################################################################################
 # Assemble the final image
