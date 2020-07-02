@@ -115,17 +115,7 @@ FROM base AS build-cabal
 
 ENV CABAL_VERSION 3.2.0.0
 
-RUN echo "Downloading and installing cabal-install" &&\
-    TEMP="$(mktemp -d)" &&\
-    cd "$TEMP" &&\
-    CABAL_DIST_FILENAME="cabal-install-${CABAL_VERSION}-x86_64-alpine-linux-musl.tar.xz" &&\
-    CABAL_SHA256="8bae37a1ce8b5f10440b5591fed734935e1411c1b765258325ffe268e2cc2042  ${CABAL_DIST_FILENAME}" &&\
-    wget https://downloads.haskell.org/~cabal/cabal-install-${CABAL_VERSION}/${CABAL_DIST_FILENAME} &&\
-    echo "${CABAL_SHA256}" | sha256sum -c - &&\
-    tar Jxf ${CABAL_DIST_FILENAME} &&\
-    mv cabal /usr/bin/cabal &&\
-    cd / &&\
-    rm -r "$TEMP"
+RUN ghcup install-cabal ${CABAL_VERSION}
 
 ################################################################################
 # Assemble the final image
@@ -135,13 +125,13 @@ FROM base AS image
 ARG GHC_BUILD_TYPE
 ARG GHC_VERSION
 
-COPY --from=build-ghc /.ghcup /.ghcup
-COPY --from=build-tooling /usr/bin/stack /usr/bin/stack
-COPY --from=build-cabal /usr/bin/cabal /usr/bin/cabal
-
 # NOTE: 'stack --docker' needs bash + usermod/groupmod (from shadow)
 # cabal needs libffi
 RUN apk add --no-cache bash shadow openssh-client tar libffi
+
+COPY --from=build-ghc /.ghcup /.ghcup
+COPY --from=build-tooling /usr/bin/stack /usr/bin/stack
+COPY --from=build-cabal /.ghcup/bin/cabal /.ghcup/bin/cabal
 
 RUN ghcup set ${GHC_VERSION} &&\
     stack config set system-ghc --global true
