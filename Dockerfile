@@ -28,12 +28,12 @@ RUN apk upgrade --no-cache &&\
         apk add --no-cache gmp-dev; \
     fi
 
-ENV GHCUP_SHA256="cfdb01dde77121859b5d90b6707238b54e23787fcbb3003e18ab52a5dbfee330  /usr/bin/ghcup"
+ENV GHCUP_VERSION="0.1.8" GHCUP_SHA256="7ffcd4c3de156e895b648c75a36c762be2a4932883f3cd598f7a483c97d4a8a9  /usr/bin/ghcup"
 
 # Download, verify, and install ghcup
 RUN echo "Downloading and installing ghcup" &&\
     cd /tmp &&\
-    wget -O /usr/bin/ghcup "https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup" &&\
+    wget -O /usr/bin/ghcup "https://downloads.haskell.org/~ghcup/${GHCUP_VERSION}/x86_64-linux-ghcup-${GHCUP_VERSION}" &&\
     if ! echo -n "${GHCUP_SHA256}" | sha256sum -c -; then \
         echo "ghcup checksum failed" >&2 &&\
         exit 1 ;\
