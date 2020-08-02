@@ -1,7 +1,7 @@
 ################################################################################
 # Variables
 # GHC version to build
-TARGET_GHC_VERSION ?= 8.10.1
+TARGET_GHC_VERSION ?= 8.8.4
 # Must be one of 'gmp' or 'simple'; used to build GHC with support for either
 # 'integer-gmp' (with 'libgmp') or 'integer-simple'
 TARGET_GHC_BUILD_TYPE ?= gmp
