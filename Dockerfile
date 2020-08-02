@@ -87,7 +87,7 @@ RUN echo "Compiling and installing GHC" &&\
     rm /tmp/build.mk &&\
     echo "Uninstalling GHC bootstrapping compiler" &&\
     apk del ghc &&\
-    ghcup set ${GHC_VERSION}
+    ghcup set ghc ${GHC_VERSION}
 
 ################################################################################
 # Intermediate layer that assembles 'stack' tooling
@@ -115,7 +115,7 @@ FROM base AS build-cabal
 
 ENV CABAL_VERSION 3.2.0.0
 
-RUN ghcup install-cabal ${CABAL_VERSION}
+RUN ghcup install cabal ${CABAL_VERSION}
 
 ################################################################################
 # Assemble the final image
